@@ -166,8 +166,7 @@ example (x : M) :
 
 
 
-
-
+noncomputable section
 
 structure Point where
   x : ℝ
@@ -180,7 +179,46 @@ example (p : HyperbolicPlane) :
     p.1.x ^ 2 + p.1.y ^ 2 < 1 := by
   exact p.2
 
-axiom hyperbolicDist : HyperbolicPlane → HyperbolicPlane → ℝ
+axiom hyperbolicDist :
+  HyperbolicPlane → HyperbolicPlane → ℝ
+
+/-- Distance from a point to itself is zero. -/
+axiom hyperbolicDist_self
+    (x : HyperbolicPlane) :
+    hyperbolicDist x x = 0
+
+/-- Distance is symmetric. -/
+axiom hyperbolicDist_comm
+    (x y : HyperbolicPlane) :
+    hyperbolicDist x y =
+    hyperbolicDist y x
+
+/-- Triangle inequality. -/
+axiom hyperbolicDist_triangle
+    (x y z : HyperbolicPlane) :
+    hyperbolicDist x z ≤
+      hyperbolicDist x y +
+      hyperbolicDist y z
+
+/-- Distance is always nonnegative. -/
+axiom hyperbolicDist_nonneg
+    (x y : HyperbolicPlane) :
+    0 ≤ hyperbolicDist x y
+
+/-- Zero distance implies equality. -/
+axiom hyperbolicDist_eq_zero
+    {x y : HyperbolicPlane} :
+    hyperbolicDist x y = 0 →
+    x = y
+
+instance : MetricSpace HyperbolicPlane where
+  dist := hyperbolicDist
+  dist_self := hyperbolicDist_self
+  dist_comm := hyperbolicDist_comm
+  dist_triangle := hyperbolicDist_triangle
+  eq_of_dist_eq_zero := hyperbolicDist_eq_zero
+
+
 
 def hyperbolicDisc (p : HyperbolicPlane) (r : ℝ) : Set HyperbolicPlane :=
   { q : HyperbolicPlane | hyperbolicDist p q < r }
@@ -197,3 +235,45 @@ instance : MetricSpace HyperbolicPlane where
   eq_of_dist_eq_zero := by
     intro p q h
     exact eq_of_hyperbolicDist_eq_zero h
+
+set_option linter.style.whitespace false
+
+structure RiemannianMetric
+    (X : Type*)
+    [TopologicalSpace X]
+    (TangentSpace : X → Type*)
+    [∀ p, AddCommGroup (TangentSpace p)]
+    [∀ p, Module ℝ (TangentSpace p)] where
+
+  g :
+    ∀ p,
+      TangentSpace p → TangentSpace p → ℝ
+
+  add_left :
+    ∀ p u v w,
+      g p (u + v) w =
+      g p u w + g p v w
+
+  smul_left :
+    ∀ p a u w,
+      g p (a • u) w =
+      a * g p u w
+
+  add_right :
+    ∀ p u v w,
+      g p u (v + w) =
+      g p u v + g p u w
+
+  smul_right :
+    ∀ p a u v,
+      g p u (a • v) =
+      a * g p u v
+
+  symmetric :
+    ∀ p u v,
+      g p u v = g p v u
+
+  positive :
+    ∀ p v,
+      v ≠ 0 →
+      0 < g p v v
