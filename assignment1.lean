@@ -277,3 +277,21 @@ structure RiemannianMetric
     ∀ p v,
       v ≠ 0 →
       0 < g p v v
+
+abbrev HyperbolicSpace (n : ℕ) :=
+  RiemannianMetric ℝ (fun _ : ℝ => Fin n → ℝ)
+
+instance (n : ℕ) : TopologicalSpace (HyperbolicSpace n) :=
+  ⟨fun _ => True, trivial, fun _ _ _ _ => trivial, fun _ _ => trivial⟩
+
+variable
+  (n : ℕ)
+  (M : Type*)
+
+variable
+  [TopologicalSpace M]
+  [ChartedSpace (HyperbolicSpace n) M]
+
+example (x : M) :
+    x ∈ (chartAt (HyperbolicSpace n) x).source := by
+  exact mem_chart_source (H := HyperbolicSpace n) x
